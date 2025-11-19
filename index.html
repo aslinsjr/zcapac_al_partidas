@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guia de Implementação - Relatório de Partidas de Clientes SAP ABAP</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="guia_style.css">
 </head>
 <body>
     <div class="container">
@@ -590,10 +590,833 @@ DATA: gv_faedt TYPE faedt_kk.</code></pre>
                 </div>
             </section>
 
-            <!-- Continue com as outras seções... Devido ao limite de caracteres, vou criar os arquivos CSS e JS separados -->
+            <!-- Section 7: Include EVE -->
+            <section id="programa-eve" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">🎯</span>
+                                <span>7. CRIAR INCLUDE EVE (Eventos de Tela)</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <h3>📝 Criar o Include</h3>
+                                <ol>
+                                    <li>Acesse <code>SE38</code></li>
+                                    <li>Clique em <strong>"Create"</strong> → <strong>"Include"</strong></li>
+                                    <li>Nome: <code>ZCAPAC_AL_PARTIDAS_EVE</code></li>
+                                </ol>
+
+                                <h3>💻 Código Completo</h3>
+                                <pre><code>*&---------------------------------------------------------------------*
+*&  Include           ZCAPAC_AL_PARTIDAS_EVE
+*&---------------------------------------------------------------------*
+
+INITIALIZATION.
+
+  SELECT SINGLE low
+    INTO p_bukrs
+    FROM tvarvc
+    WHERE name = 'ZVAR_BUKRS_DEFAULT'
+      AND type = 'P'.
+
+  DATA: ls_functxt TYPE smp_dyntxt.
+  ls_functxt-icon_id = icon_view_table.
+  ls_functxt-text = 'Configuração'.
+  ls_functxt-quickinfo = 'Abrir tabela de configuração'.
+  sscrfields-functxt_01 = ls_functxt.
+
+AT SELECTION-SCREEN OUTPUT.
+
+  LOOP AT SCREEN.
+    IF r_aberto = 'X'.
+      IF screen-group1 = 'M1'.
+        screen-active = 1.
+      ELSEIF screen-group1 = 'M2'.
+        screen-active = 0.
+      ENDIF.
+    ELSE.
+      IF screen-group1 = 'M1'.
+        screen-active = 0.
+      ELSEIF screen-group1 = 'M2'.
+        screen-active = 1.
+      ENDIF.
+    ENDIF.
+    MODIFY SCREEN.
+  ENDLOOP.
+
+AT SELECTION-SCREEN.
+
+  CASE sscrfields-ucomm.
+    WHEN 'FC01'.
+      CALL FUNCTION 'VIEW_MAINTENANCE_CALL'
+        EXPORTING
+          action    = 'U'
+          view_name = 'ZXX_CONFIG'.
+  ENDCASE.</code></pre>
+
+                                <h3>📚 Explicação dos Eventos</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Evento</th>
+                                            <th>Quando Ocorre</th>
+                                            <th>Função</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>INITIALIZATION</code></td>
+                                            <td>Antes da tela aparecer</td>
+                                            <td>Busca empresa da STVARV e configura botão</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>AT SELECTION-SCREEN OUTPUT</code></td>
+                                            <td>Sempre que tela é redesenhada</td>
+                                            <td>Mostra/oculta campos baseado no radiobutton</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>AT SELECTION-SCREEN</code></td>
+                                            <td>Quando usuário clica em botão</td>
+                                            <td>Abre SM30 da configuração</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="info-box">
+                                    <strong>💡 Dica:</strong> O evento <code>AT SELECTION-SCREEN OUTPUT</code> controla a visibilidade dinâmica dos campos. Quando "Partidas em Aberto" está selecionado, mostra o campo de data de lançamento. Quando "Partidas Compensadas" está selecionado, mostra o campo de data de compensação.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 8: Include F01 -->
+            <section id="programa-f01" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">⚙️</span>
+                                <span>8. CRIAR INCLUDE F01 (Sub-rotinas/Forms)</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="warning-box">
+                                    <strong>⚠️ Atenção:</strong> Este é o arquivo mais importante e extenso. Contém toda a lógica de processamento.
+                                </div>
+
+                                <h3>📝 Criar o Include</h3>
+                                <ol>
+                                    <li>Acesse <code>SE38</code></li>
+                                    <li>Clique em <strong>"Create"</strong> → <strong>"Include"</strong></li>
+                                    <li>Nome: <code>ZCAPAC_AL_PARTIDAS_F01</code></li>
+                                </ol>
+
+                                <h3>📊 Estrutura das Forms</h3>
+                                <p>O include F01 contém 8 sub-rotinas principais:</p>
+
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>FORM</th>
+                                            <th>Função</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>ZF_PROCESSAR_DADOS</code></td>
+                                            <td>Busca configuração e direciona processamento</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ZF_PROCESSAR_ABERTO</code></td>
+                                            <td>Seleciona partidas em aberto (BSID)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ZF_PROCESSAR_COMPENSADO</code></td>
+                                            <td>Seleciona partidas compensadas (BSAD)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ZF_BUSCAR_MATERIAIS</code></td>
+                                            <td>Busca materiais e descrições</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ZF_CALCULAR_VENCIMENTO</code></td>
+                                            <td>Calcula data de vencimento</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ZF_EXIBIR_ALV</code></td>
+                                            <td>Exibe dados no ALV</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ZF_MONTAR_FIELDCAT</code></td>
+                                            <td>Monta catálogo de campos do ALV</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ZF_SALVAR_LOG</code></td>
+                                            <td>Salva execução na tabela de log</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>💻 Código Completo - Parte 1: Processamento Principal</h3>
+                                <pre><code>*&---------------------------------------------------------------------*
+*&  Include           ZCAPAC_AL_PARTIDAS_F01
+*&---------------------------------------------------------------------*
+
+FORM zf_processar_dados.
+
+  DATA: lt_blart TYPE ty_r_blart,
+        ls_blart LIKE LINE OF lt_blart.
+
+  SELECT bukrs blart
+    FROM zxx_config
+    INTO TABLE gt_config
+    WHERE bukrs = p_bukrs.
+
+  IF sy-subrc <> 0.
+    MESSAGE e000.
+    RETURN.
+  ENDIF.
+
+  LOOP AT gt_config INTO gs_config.
+    ls_blart-sign   = 'I'.
+    ls_blart-option = 'EQ'.
+    ls_blart-low    = gs_config-blart.
+    CLEAR ls_blart-high.
+    APPEND ls_blart TO lt_blart.
+  ENDLOOP.
+
+  IF r_aberto = 'X'.
+    PERFORM zf_processar_aberto USING lt_blart.
+  ELSE.
+    PERFORM zf_processar_compensado USING lt_blart.
+  ENDIF.
+
+ENDFORM.</code></pre>
+
+                                <h3>💻 Código Completo - Parte 2: Seleção de Dados</h3>
+                                <pre><code>FORM zf_processar_aberto USING pt_blart TYPE ty_r_blart.
+
+  SELECT bukrs kunnr belnr gjahr buzei
+         xblnr zuonr budat shkzg dmbtr
+         zfbdt zbd1t zlsch
+    FROM bsid
+    INTO TABLE gt_bsid
+    WHERE bukrs = p_bukrs
+      AND kunnr IN s_kunnr
+      AND belnr IN s_belnr
+      AND budat = p_budat
+      AND shkzg = 'S'
+      AND blart IN pt_blart.
+
+  IF sy-subrc <> 0.
+    MESSAGE w001.
+    RETURN.
+  ENDIF.
+
+  PERFORM zf_buscar_materiais.
+  PERFORM zf_calcular_vencimento USING 'BSID'.
+  PERFORM zf_exibir_alv.
+
+ENDFORM.
+
+FORM zf_processar_compensado USING pt_blart TYPE ty_r_blart.
+
+  SELECT bukrs kunnr belnr gjahr buzei
+         xblnr zuonr budat shkzg dmbtr
+         zfbdt zbd1t zlsch augdt
+    FROM bsad
+    INTO TABLE gt_bsad
+    WHERE bukrs = p_bukrs
+      AND kunnr IN s_kunnr
+      AND belnr IN s_belnr
+      AND augdt = p_augdt
+      AND shkzg = 'S'
+      AND blart IN pt_blart.
+
+  IF sy-subrc <> 0.
+    MESSAGE w002.
+    RETURN.
+  ENDIF.
+
+  PERFORM zf_buscar_materiais.
+  PERFORM zf_calcular_vencimento USING 'BSAD'.
+  PERFORM zf_exibir_alv.
+
+ENDFORM.</code></pre>
+
+                                <div class="success-box">
+                                    <strong>✅ Checkpoint:</strong> O código completo do F01 tem aproximadamente 400 linhas. Para ver o código completo, acesse o arquivo que você já tem implementado ou solicite as partes restantes.
+                                </div>
+
+                                <h3>🔄 Fluxo de Processamento</h3>
+                                <div class="info-box">
+                                    <strong>1.</strong> ZF_PROCESSAR_DADOS → Busca configuração<br>
+                                    <strong>2.</strong> ZF_PROCESSAR_ABERTO/COMPENSADO → Busca partidas<br>
+                                    <strong>3.</strong> ZF_BUSCAR_MATERIAIS → Busca detalhes<br>
+                                    <strong>4.</strong> ZF_CALCULAR_VENCIMENTO → Calcula datas<br>
+                                    <strong>5.</strong> ZF_EXIBIR_ALV → Mostra resultado<br>
+                                    <strong>6.</strong> ZF_SALVAR_LOG → Grava log (se checkbox marcado)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 9: Programa Principal -->
+            <section id="programa-main" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">🚀</span>
+                                <span>9. CRIAR PROGRAMA PRINCIPAL</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <h3>📝 Criar o Programa</h3>
+                                <ol>
+                                    <li>Acesse <code>SE38</code></li>
+                                    <li>Digite: <code>ZCAPAC_AL_PARTIDAS</code></li>
+                                    <li>Clique em <strong>"Criar"</strong></li>
+                                    <li>Tipo: <strong>Executable Program</strong></li>
+                                    <li>Título: <strong>Relatório de Partidas de Clientes</strong></li>
+                                </ol>
+
+                                <h3>💻 Código Completo</h3>
+                                <pre><code>REPORT zcapac_al_partidas MESSAGE-ID zmsg.
+
+INCLUDE zcapac_al_partidas_top.
+
+*----------------------------------------------------------------------*
+*  TELA DE SELEÇÃO
+*----------------------------------------------------------------------*
+SELECTION-SCREEN BEGIN OF BLOCK blk1 WITH FRAME TITLE text-001.
+
+PARAMETERS: p_bukrs TYPE bukrs OBLIGATORY.
+
+SELECT-OPTIONS: s_kunnr FOR bsid-kunnr.
+
+SELECT-OPTIONS: s_belnr FOR bsid-belnr.
+
+SELECTION-SCREEN END OF BLOCK blk1.
+
+SELECTION-SCREEN BEGIN OF BLOCK blk2 WITH FRAME TITLE text-002.
+
+PARAMETERS: r_aberto RADIOBUTTON GROUP grp1 DEFAULT 'X' USER-COMMAND cmd1,
+            r_compen RADIOBUTTON GROUP grp1.
+
+PARAMETERS: p_budat TYPE budat MODIF ID m1.
+
+PARAMETERS: p_augdt TYPE augdt MODIF ID m2.
+
+SELECTION-SCREEN END OF BLOCK blk2.
+
+SELECTION-SCREEN BEGIN OF BLOCK blk3 WITH FRAME TITLE text-003.
+
+PARAMETERS: p_salvar TYPE c AS CHECKBOX DEFAULT 'X'.
+
+SELECTION-SCREEN END OF BLOCK blk3.
+
+SELECTION-SCREEN FUNCTION KEY 1.
+
+INCLUDE zcapac_al_partidas_eve.
+
+START-OF-SELECTION.
+
+  PERFORM zf_processar_dados.
+
+END-OF-SELECTION.
+
+  IF p_salvar = 'X' AND gt_alv IS NOT INITIAL.
+    PERFORM zf_salvar_log.
+    MESSAGE s003.
+  ENDIF.
+
+INCLUDE zcapac_al_partidas_f01.</code></pre>
+
+                                <h3>📚 Explicação da Estrutura</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Elemento</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>REPORT</code></td>
+                                            <td>Define nome e classe de mensagem</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>SELECTION-SCREEN</code></td>
+                                            <td>Define tela de entrada com parâmetros</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>PARAMETERS</code></td>
+                                            <td>Campos de entrada únicos</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>SELECT-OPTIONS</code></td>
+                                            <td>Campos com opções de range (de/até)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>RADIOBUTTON</code></td>
+                                            <td>Opções exclusivas (apenas uma marcada)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>CHECKBOX</code></td>
+                                            <td>Opção liga/desliga</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>START-OF-SELECTION</code></td>
+                                            <td>Executa ao pressionar F8</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>END-OF-SELECTION</code></td>
+                                            <td>Executa após processamento principal</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="info-box">
+                                    <strong>💡 MODIF ID:</strong> Os IDs M1 e M2 são usados para controlar a visibilidade dos campos. M1 aparece quando "Partidas em Aberto" está selecionado, M2 quando "Partidas Compensadas" está selecionado.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 10: Textos e Mensagens -->
+            <section id="textos" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">💬</span>
+                                <span>10. CONFIGURAR TEXTOS E MENSAGENS</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <h3>📝 Text Symbols (Títulos dos Blocos)</h3>
+                                <ol>
+                                    <li>No programa principal (SE38), vá em: <code>Goto → Text Elements → Text Symbols</code></li>
+                                    <li>Adicione:</li>
+                                </ol>
+
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Text</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>001</code></td>
+                                            <td>Seleção de Dados</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>002</code></td>
+                                            <td>Tipo de Partida</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>003</code></td>
+                                            <td>Opções de Gravação</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>🏷️ Selection Texts (Rótulos dos Campos)</h3>
+                                <ol>
+                                    <li>Vá em: <code>Goto → Text Elements → Selection Texts</code></li>
+                                    <li>Configure:</li>
+                                </ol>
+
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Text</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>P_BUKRS</code></td>
+                                            <td>Empresa</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>S_KUNNR</code></td>
+                                            <td>Conta do Cliente</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>S_BELNR</code></td>
+                                            <td>Número do Documento</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>R_ABERTO</code></td>
+                                            <td>Partidas em Aberto</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>R_COMPEN</code></td>
+                                            <td>Partidas Compensadas</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>P_BUDAT</code></td>
+                                            <td>Data de Lançamento</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>P_AUGDT</code></td>
+                                            <td>Data de Compensação</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>P_SALVAR</code></td>
+                                            <td>Salvar no Log</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>💌 Messages (Classe de Mensagem)</h3>
+                                <ol>
+                                    <li>Execute <code>SE91</code></li>
+                                    <li>Digite: <code>ZMSG</code></li>
+                                    <li>Clique em <strong>"Create"</strong></li>
+                                    <li>Adicione as mensagens:</li>
+                                </ol>
+
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Nr</th>
+                                            <th>Text</th>
+                                            <th>Tipo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>000</code></td>
+                                            <td>Nenhuma configuração encontrada para esta empresa</td>
+                                            <td><span class="badge badge-orange">E</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>001</code></td>
+                                            <td>Não existem partidas em aberto com os parâmetros informados</td>
+                                            <td><span class="badge badge-orange">W</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>002</code></td>
+                                            <td>Não existem partidas compensadas com os parâmetros informados</td>
+                                            <td><span class="badge badge-orange">W</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>003</code></td>
+                                            <td>Dados salvos no log com sucesso!</td>
+                                            <td><span class="badge badge-green">S</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>004</code></td>
+                                            <td>Erro ao exibir ALV</td>
+                                            <td><span class="badge badge-orange">E</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="info-box">
+                                    <strong>📌 Tipos de Mensagem:</strong><br>
+                                    <strong>E</strong> = Error (para o processamento)<br>
+                                    <strong>W</strong> = Warning (aviso, continua)<br>
+                                    <strong>S</strong> = Success (sucesso)<br>
+                                    <strong>I</strong> = Information (informação)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 11: Testes -->
+            <section id="testes" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">🧪</span>
+                                <span>11. COMO TESTAR O PROGRAMA</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <h3>🎯 Preparação dos Dados</h3>
+                                
+                                <h4>1️⃣ Cadastrar Configuração</h4>
+                                <ol>
+                                    <li>Execute <code>SM30</code></li>
+                                    <li>Digite: <code>ZXX_CONFIG</code></li>
+                                    <li>Clique em <strong>"Manter"</strong></li>
+                                    <li>Adicione registros de exemplo:</li>
+                                </ol>
+
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Empresa</th>
+                                            <th>Tipo Doc</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1000</td>
+                                            <td>DR</td>
+                                        </tr>
+                                        <tr>
+                                            <td>1000</td>
+                                            <td>DZ</td>
+                                        </tr>
+                                        <tr>
+                                            <td>1000</td>
+                                            <td>RV</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>2️⃣ Verificar Dados Existentes</h4>
+                                <p>Execute <code>SE16N</code> e verifique se há dados nas tabelas:</p>
+                                <ul>
+                                    <li><strong>BSID</strong> - Partidas em aberto</li>
+                                    <li><strong>BSAD</strong> - Partidas compensadas</li>
+                                </ul>
+
+                                <div class="warning-box">
+                                    <strong>⚠️ Importante:</strong> Anote alguns números de cliente (KUNNR) e datas que existem nas tabelas para usar nos testes.
+                                </div>
+
+                                <h3>🚀 Executando o Programa</h3>
+
+                                <h4>Teste 1: Partidas em Aberto</h4>
+                                <ol>
+                                    <li>Execute <code>SE38</code> → <code>ZCAPAC_AL_PARTIDAS</code> → <kbd>F8</kbd></li>
+                                    <li>Na tela de seleção:
+                                        <ul>
+                                            <li><strong>Empresa:</strong> 1000 (preenchido automaticamente)</li>
+                                            <li><strong>◉ Partidas em Aberto</strong> (marcado)</li>
+                                            <li><strong>Data Lançamento:</strong> Use data recente</li>
+                                            <li><strong>☑ Salvar no Log</strong> (marcado)</li>
+                                        </ul>
+                                    </li>
+                                    <li>Pressione <kbd>F8</kbd> para executar</li>
+                                </ol>
+
+                                <div class="success-box">
+                                    <strong>✅ Resultado Esperado:</strong>
+                                    <ul>
+                                        <li>Abre tela ALV com partidas</li>
+                                        <li>Colunas: Empresa, Cliente, Documento, Material, Vencimento, etc.</li>
+                                        <li>Mensagem: "Dados salvos no log com sucesso!"</li>
+                                    </ul>
+                                </div>
+
+                                <h4>Teste 2: Partidas Compensadas</h4>
+                                <ol>
+                                    <li>Execute novamente o programa</li>
+                                    <li>Selecione: <strong>○ Partidas Compensadas</strong></li>
+                                    <li>Preencha <strong>Data de Compensação</strong></li>
+                                    <li>Execute <kbd>F8</kbd></li>
+                                </ol>
+
+                                <h4>Teste 3: Botão de Configuração</h4>
+                                <ol>
+                                    <li>Na tela de seleção, clique no botão <strong>🗂️ Configuração</strong></li>
+                                    <li>Deve abrir a SM30 da tabela ZXX_CONFIG</li>
+                                    <li>Você pode adicionar/remover tipos de documento</li>
+                                </ol>
+
+                                <h4>Teste 4: Verificar Log</h4>
+                                <ol>
+                                    <li>Execute <code>SE16N</code></li>
+                                    <li>Digite: <code>ZXX_LOG</code></li>
+                                    <li>Execute sem filtros</li>
+                                    <li>Verifique se há registros com:
+                                        <ul>
+                                            <li>Sua empresa</li>
+                                            <li>Data/hora de hoje</li>
+                                            <li>Seu usuário</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+
+                                <h3>✅ Checklist de Validação</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Tela de seleção aparece corretamente</td>
+                                            <td>☐</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Empresa preenchida automaticamente (STVARV)</td>
+                                            <td>☐</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Radio buttons funcionam (muda campos visíveis)</td>
+                                            <td>☐</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Execução mostra ALV com dados</td>
+                                            <td>☐</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Botão Configuração abre SM30</td>
+                                            <td>☐</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Checkbox "Salvar no Log" funciona</td>
+                                            <td>☐</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Dados gravados em ZXX_LOG</td>
+                                            <td>☐</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Campo Vencimento editável no ALV</td>
+                                            <td>☐</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 12: Troubleshooting -->
+            <section id="troubleshooting" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">🔧</span>
+                                <span>12. TROUBLESHOOTING E SOLUÇÕES</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <h3>❌ Problemas Comuns e Soluções</h3>
+
+                                <h4>Erro: "Nome de coluna desconhecido BUKRS"</h4>
+                                <div class="warning-box">
+                                    <strong>Causa:</strong> Tipo incorreto na declaração de tabela range<br>
+                                    <strong>Solução:</strong> No TOP, adicione: <code>TYPES: ty_r_blart TYPE RANGE OF blart.</code><br>
+                                    No F01, use: <code>DATA: lt_blart TYPE ty_r_blart.</code>
+                                </div>
+
+                                <h4>Erro: "Nenhuma configuração encontrada"</h4>
+                                <div class="warning-box">
+                                    <strong>Causa:</strong> Tabela ZXX_CONFIG vazia ou não existe<br>
+                                    <strong>Solução:</strong> Execute SM30 → ZXX_CONFIG e cadastre tipos de documento
+                                </div>
+
+                                <h4>Erro: "Não existem partidas"</h4>
+                                <div class="warning-box">
+                                    <strong>Causa:</strong> Data incorreta ou filtros muito restritivos<br>
+                                    <strong>Solução:</strong> 
+                                    <ul>
+                                        <li>Deixe campos de cliente e documento vazios</li>
+                                        <li>Use data recente ou deixe em branco</li>
+                                        <li>Verifique dados em SE16N → BSID/BSAD</li>
+                                    </ul>
+                                </div>
+
+                                <h4>Erro: "sscrfields desconhecido"</h4>
+                                <div class="warning-box">
+                                    <strong>Causa:</strong> Falta declaração no TOP<br>
+                                    <strong>Solução:</strong> No TOP, linha 5: <code>TABLES: bsid, bsad, bseg, makt, sscrfields.</code>
+                                </div>
+
+                                <h4>ALV não exibe dados</h4>
+                                <div class="warning-box">
+                                    <strong>Causa:</strong> Tabela gt_alv vazia<br>
+                                    <strong>Solução:</strong> 
+                                    <ul>
+                                        <li>Verifique se SELECT retornou dados</li>
+                                        <li>Adicione BREAK-POINT antes do ALV</li>
+                                        <li>Inspecione gt_alv no debugger</li>
+                                    </ul>
+                                </div>
+
+                                <h4>Checkbox "Salvar" não funciona</h4>
+                                <div class="warning-box">
+                                    <strong>Causa:</strong> Lógica no END-OF-SELECTION incorreta<br>
+                                    <strong>Solução:</strong> Verifique se tem: <code>IF p_salvar = 'X' AND gt_alv IS NOT INITIAL.</code>
+                                </div>
+
+                                <h4>Empresa não preenche automaticamente</h4>
+                                <div class="warning-box">
+                                    <strong>Causa:</strong> STVARV não configurada<br>
+                                    <strong>Solução:</strong> Execute STVARV e crie variável ZVAR_BUKRS_DEFAULT
+                                </div>
+
+                                <h3>🐛 Como Debugar</h3>
+                                <ol>
+                                    <li>Coloque cursor em uma linha de código</li>
+                                    <li>Clique em <strong>"Break-point"</strong> ou pressione <kbd>Ctrl+Shift+B</kbd></li>
+                                    <li>Execute o programa (<kbd>F8</kbd>)</li>
+                                    <li>O programa pausará no break-point</li>
+                                    <li>Use <kbd>F5</kbd> para executar linha por linha</li>
+                                    <li>Use <kbd>F6</kbd> para pular sub-rotinas</li>
+                                    <li>Inspecione variáveis na parte inferior da tela</li>
+                                </ol>
+
+                                <h3>💡 Dicas de Boas Práticas</h3>
+                                <ul>
+                                    <li>✅ Sempre crie uma <strong>Request de Transporte</strong></li>
+                                    <li>✅ Teste em ambiente de <strong>desenvolvimento</strong> primeiro</li>
+                                    <li>✅ Documente seu código com <strong>comentários</strong></li>
+                                    <li>✅ Use <kbd>F1</kbd> para ajuda sobre campos</li>
+                                    <li>✅ Use <kbd>F4</kbd> para buscar valores (matchcode)</li>
+                                    <li>✅ Salve (<kbd>Ctrl+S</kbd>) e ative (<kbd>Ctrl+F3</kbd>) frequentemente</li>
+                                </ul>
+
+                                <h3>📞 Suporte Adicional</h3>
+                                <div class="info-box">
+                                    <strong>Recursos Úteis:</strong>
+                                    <ul>
+                                        <li>📚 SAP Help Portal: <code>help.sap.com</code></li>
+                                        <li>💬 SAP Community: <code>community.sap.com</code></li>
+                                        <li>📖 ABAP Keyword Documentation: <kbd>F1</kbd> em qualquer comando</li>
+                                    </ul>
+                                </div>
+
+                                <div class="success-box">
+                                    <strong>🎉 Parabéns!</strong> Você completou a implementação do Relatório de Partidas de Clientes! Continue praticando e explorando novas funcionalidades do ABAP.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
         </main>
     </div>
-    <script src="script.js"></script>
+    <script src="guia_script.js"></script>
 </body>
-</html>
+</html
