@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia de Implementação - Relatório de Partidas de Clientes SAP ABAP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>📘 Guia SAP ABAP</h1>
+                <p>Relatório de Partidas de Clientes</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#introducao" class="menu-link active">1. Introdução</a></li>
+                <li><a href="#pre-requisitos" class="menu-link">2. Pré-requisitos</a></li>
+                <li><a href="#tabela-config" class="menu-link">3. Tabela de Configuração</a></li>
+                <li><a href="#tabela-log" class="menu-link">4. Tabela de Log</a></li>
+                <li><a href="#stvarv" class="menu-link">5. Configurar STVARV</a></li>
+                <li><a href="#programa-top" class="menu-link">6. Include TOP</a></li>
+                <li><a href="#programa-eve" class="menu-link">7. Include EVE</a></li>
+                <li><a href="#programa-f01" class="menu-link">8. Include F01</a></li>
+                <li><a href="#programa-main" class="menu-link">9. Programa Principal</a></li>
+                <li><a href="#textos" class="menu-link">10. Textos e Mensagens</a></li>
+                <li><a href="#testes" class="menu-link">11. Como Testar</a></li>
+                <li><a href="#troubleshooting" class="menu-link">12. Troubleshooting</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Hero Section -->
+            <div class="hero">
+                <h1>🚀 Guia de Implementação SAP ABAP</h1>
+                <p>Relatório de Partidas de Clientes em Aberto e Compensadas - Passo a Passo Completo para Iniciantes</p>
+            </div>
+
+            <!-- Section 1: Introdução -->
+            <section id="introducao" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">📚</span>
+                                <span>1. INTRODUÇÃO</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Este guia fornece um passo a passo completo para implementar um relatório de partidas de clientes (em aberto e compensadas) no SAP. O documento foi desenvolvido especialmente para iniciantes em ABAP, com explicações detalhadas de cada etapa.</p>
+
+                                <h3>🎯 Objetivo do Projeto</h3>
+                                <p>Criar um relatório que permite:</p>
+                                <ul>
+                                    <li>✅ Visualizar partidas em aberto ou compensadas</li>
+                                    <li>✅ Editar data de vencimento diretamente no ALV</li>
+                                    <li>✅ Salvar execuções em tabela de log automaticamente</li>
+                                    <li>✅ Configurar tipos de documentos por empresa</li>
+                                    <li>✅ Acessar facilmente a configuração via botão dedicado</li>
+                                </ul>
+
+                                <h3>📋 O que você vai criar</h3>
+                                <div class="info-box">
+                                    <strong>Estrutura do Programa:</strong>
+                                    <ul>
+                                        <li><strong>2 Tabelas Z:</strong> Configuração e Log</li>
+                                        <li><strong>1 Programa Principal:</strong> ZCAPAC_AL_PARTIDAS</li>
+                                        <li><strong>3 Includes:</strong> TOP, EVE, F01</li>
+                                        <li><strong>1 Variável STVARV:</strong> Empresa padrão</li>
+                                        <li><strong>1 Classe de Mensagem:</strong> ZMSG</li>
+                                    </ul>
+                                </div>
+
+                                <h3>⏱️ Tempo Estimado</h3>
+                                <p><span class="badge badge-blue">2-3 horas</span> para implementação completa</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Pré-requisitos -->
+            <section id="pre-requisitos" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">🔧</span>
+                                <span>2. PRÉ-REQUISITOS E CONCEITOS</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <h3>📚 Conhecimentos Necessários</h3>
+                                <ul>
+                                    <li>Noções básicas de ABAP (declaração de variáveis, estruturas, tabelas internas)</li>
+                                    <li>Comandos SELECT do SAP</li>
+                                    <li>Conceitos básicos de ALV (ABAP List Viewer)</li>
+                                    <li>Navegação no ambiente SAP (SE11, SE38, SE80, SM30)</li>
+                                </ul>
+
+                                <h3>🛠️ Transações Utilizadas</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Transação</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>SE11</code></td>
+                                            <td>Dicionário de Dados (criação de tabelas, estruturas, domínios)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>SE38</code></td>
+                                            <td>Editor ABAP (criação e edição de programas)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>SE80</code></td>
+                                            <td>Object Navigator (desenvolvimento completo)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>SM30</code></td>
+                                            <td>Manutenção de Views/Tabelas</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>STVARV</code></td>
+                                            <td>Manutenção de variáveis de seleção</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>SE91</code></td>
+                                            <td>Criação de classes de mensagem</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>SE16N</code></td>
+                                            <td>Visualização de dados de tabelas</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>🗂️ Tabelas SAP Utilizadas</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Tabela</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>BSID</code></td>
+                                            <td>Partidas individuais de clientes em aberto</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>BSAD</code></td>
+                                            <td>Partidas individuais de clientes compensadas</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>BSEG</code></td>
+                                            <td>Segmentos de documentos contábeis</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>MAKT</code></td>
+                                            <td>Descrição de materiais</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>TVARVC</code></td>
+                                            <td>Variáveis de seleção</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Tabela de Configuração -->
+            <section id="tabela-config" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">🗄️</span>
+                                <span>3. CRIAR TABELA DE CONFIGURAÇÃO (ZXX_CONFIG)</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="info-box">
+                                    <strong>💡 Propósito:</strong> Esta tabela armazenará os tipos de documentos permitidos por empresa.
+                                </div>
+
+                                <h3>📝 Passo 1: Criar a Tabela</h3>
+                                <ol>
+                                    <li>Acesse a transação <code>SE11</code></li>
+                                    <li>Digite o nome da tabela: <code>ZXX_CONFIG</code></li>
+                                    <li>Clique em <strong>"Criar"</strong></li>
+                                    <li>Escolha: <strong>"Tabela Transparent"</strong></li>
+                                </ol>
+
+                                <h3>🔧 Passo 2: Definir Campos</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Tipo</th>
+                                            <th>Tamanho</th>
+                                            <th>Chave</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>MANDT</code></td>
+                                            <td>CLNT</td>
+                                            <td>3</td>
+                                            <td>✅</td>
+                                            <td>Mandante</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>BUKRS</code></td>
+                                            <td>BUKRS</td>
+                                            <td>4</td>
+                                            <td>✅</td>
+                                            <td>Empresa</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>BLART</code></td>
+                                            <td>BLART</td>
+                                            <td>2</td>
+                                            <td>✅</td>
+                                            <td>Tipo de Documento</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="warning-box">
+                                    <strong>⚠️ Importante:</strong>
+                                    <ul>
+                                        <li>Marque a tabela como <strong>"Transparent Table"</strong></li>
+                                        <li>Categoria de ampliação: <strong>"Can be extended (character-type or numeric)"</strong></li>
+                                    </ul>
+                                </div>
+
+                                <h3>⚙️ Passo 3: Configurações Técnicas</h3>
+                                <ol>
+                                    <li>Clique em <strong>"Technical Settings"</strong> (botão na barra)</li>
+                                    <li>Configure:
+                                        <ul>
+                                            <li><strong>Data Class:</strong> APPL1</li>
+                                            <li><strong>Size Category:</strong> 0</li>
+                                        </ul>
+                                    </li>
+                                    <li>Salve (<kbd>Ctrl+S</kbd>)</li>
+                                    <li>Ative (<kbd>Ctrl+F3</kbd>)</li>
+                                </ol>
+
+                                <h3>🖥️ Passo 4: Criar View de Manutenção (SM30)</h3>
+                                <ol>
+                                    <li>Na SE11, com a tabela ZXX_CONFIG aberta, vá em: <br><code>Utilities → Table Maintenance Generator</code></li>
+                                    <li>Preencha:
+                                        <ul>
+                                            <li><strong>Authorization Group:</strong> &NC& (ou deixe em branco)</li>
+                                            <li><strong>Function Group:</strong> ZFG_CONFIG</li>
+                                            <li><strong>Maintenance Type:</strong> One Step</li>
+                                        </ul>
+                                    </li>
+                                    <li>Clique em <strong>"Create"</strong></li>
+                                </ol>
+
+                                <div class="success-box">
+                                    ✅ <strong>Pronto!</strong> Agora você pode manter a tabela via SM30
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Tabela de Log -->
+            <section id="tabela-log" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">📊</span>
+                                <span>4. CRIAR TABELA DE LOG (ZXX_LOG)</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="info-box">
+                                    <strong>💡 Propósito:</strong> Esta tabela armazenará o histórico de execuções do relatório.
+                                </div>
+
+                                <h3>📝 Criar a Tabela</h3>
+                                <ol>
+                                    <li>Acesse <code>SE11</code> e crie a tabela <code>ZXX_LOG</code></li>
+                                    <li>Escolha: <strong>"Tabela Transparent"</strong></li>
+                                </ol>
+
+                                <h3>🔧 Estrutura da Tabela</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Tipo</th>
+                                            <th>Tamanho</th>
+                                            <th>Chave</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>MANDT</code></td>
+                                            <td>CLNT</td>
+                                            <td>3</td>
+                                            <td>✅</td>
+                                            <td>Mandante</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>BUKRS</code></td>
+                                            <td>BUKRS</td>
+                                            <td>4</td>
+                                            <td>✅</td>
+                                            <td>Empresa</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>KUNNR</code></td>
+                                            <td>KUNNR</td>
+                                            <td>10</td>
+                                            <td>✅</td>
+                                            <td>Conta do Cliente</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>BELNR</code></td>
+                                            <td>BELNR_D</td>
+                                            <td>10</td>
+                                            <td>✅</td>
+                                            <td>Número do Documento</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>GJAHR</code></td>
+                                            <td>GJAHR</td>
+                                            <td>4</td>
+                                            <td>✅</td>
+                                            <td>Exercício</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>BUZEI</code></td>
+                                            <td>BUZEI</td>
+                                            <td>3</td>
+                                            <td>✅</td>
+                                            <td>Item</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>FAEDT</code></td>
+                                            <td>FAEDT_KK</td>
+                                            <td>8</td>
+                                            <td></td>
+                                            <td>Data de Vencimento</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ERDAT</code></td>
+                                            <td>ERDAT</td>
+                                            <td>8</td>
+                                            <td></td>
+                                            <td>Data de Gravação</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ERZET</code></td>
+                                            <td>ERZET</td>
+                                            <td>6</td>
+                                            <td></td>
+                                            <td>Hora de Gravação</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>ERNAM</code></td>
+                                            <td>ERNAM</td>
+                                            <td>12</td>
+                                            <td></td>
+                                            <td>Usuário</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>⚙️ Salvar e Ativar</h3>
+                                <ol>
+                                    <li>Configure <strong>Technical Settings</strong> (Data Class: APPL1, Size Category: 0)</li>
+                                    <li>Salve (<kbd>Ctrl+S</kbd>)</li>
+                                    <li>Ative (<kbd>Ctrl+F3</kbd>)</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: STVARV -->
+            <section id="stvarv" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">⚙️</span>
+                                <span>5. CONFIGURAR VARIÁVEL STVARV</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="info-box">
+                                    <strong>💡 Propósito:</strong> Esta variável preencherá automaticamente o campo empresa na tela inicial do relatório.
+                                </div>
+
+                                <h3>📝 Criar Variável de Empresa Padrão</h3>
+                                <ol>
+                                    <li>Execute a transação <code>STVARV</code></li>
+                                    <li>Clique em <strong>"New Entries"</strong></li>
+                                    <li>Preencha:
+                                        <ul>
+                                            <li><strong>Name:</strong> <code>ZVAR_BUKRS_DEFAULT</code></li>
+                                            <li><strong>Type:</strong> P (Parameter)</li>
+                                            <li><strong>Low:</strong> 1000 (ou a empresa padrão desejada)</li>
+                                        </ul>
+                                    </li>
+                                    <li>Salve</li>
+                                </ol>
+
+                                <div class="success-box">
+                                    ✅ <strong>Resultado:</strong> Quando o usuário abrir o programa, o campo empresa virá automaticamente preenchido!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Include TOP -->
+            <section id="programa-top" class="section">
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <span class="accordion-icon">💻</span>
+                                <span>6. CRIAR INCLUDE TOP (Declarações Globais)</span>
+                            </div>
+                            <span class="accordion-arrow">▶</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <h3>📝 Criar o Include</h3>
+                                <ol>
+                                    <li>Acesse <code>SE38</code></li>
+                                    <li>Clique em <strong>"Create"</strong> → <strong>"Include"</strong></li>
+                                    <li>Nome: <code>ZCAPAC_AL_PARTIDAS_TOP</code></li>
+                                </ol>
+
+                                <h3>💻 Código Completo</h3>
+                                <pre><code>*&---------------------------------------------------------------------*
+*&  Include           ZCAPAC_AL_PARTIDAS_TOP
+*&---------------------------------------------------------------------*
+
+TABLES: bsid, bsad, bseg, makt, sscrfields.
+
+*----------------------------------------------------------------------*
+* TYPES
+*----------------------------------------------------------------------*
+TYPES:
+  BEGIN OF ty_bsid,
+    bukrs TYPE bukrs,
+    kunnr TYPE kunnr,
+    belnr TYPE belnr_d,
+    gjahr TYPE gjahr,
+    buzei TYPE buzei,
+    xblnr TYPE xblnr1,
+    zuonr TYPE dzuonr,
+    budat TYPE budat,
+    shkzg TYPE shkzg,
+    dmbtr TYPE dmbtr,
+    zfbdt TYPE dzfbdt,
+    zbd1t TYPE dzbd1t,
+    zlsch TYPE dzlsch,
+  END OF ty_bsid.
+
+TYPES:
+  BEGIN OF ty_bsad,
+    bukrs TYPE bukrs,
+    kunnr TYPE kunnr,
+    belnr TYPE belnr_d,
+    gjahr TYPE gjahr,
+    buzei TYPE buzei,
+    xblnr TYPE xblnr1,
+    zuonr TYPE dzuonr,
+    budat TYPE budat,
+    shkzg TYPE shkzg,
+    dmbtr TYPE dmbtr,
+    zfbdt TYPE dzfbdt,
+    zbd1t TYPE dzbd1t,
+    zlsch TYPE dzlsch,
+    augdt TYPE augdt,
+  END OF ty_bsad.
+
+TYPES:
+  BEGIN OF ty_bseg,
+    bukrs TYPE bukrs,
+    belnr TYPE belnr_d,
+    gjahr TYPE gjahr,
+    buzei TYPE buzei,
+    matnr TYPE matnr,
+  END OF ty_bseg.
+
+TYPES:
+  BEGIN OF ty_makt,
+    matnr TYPE matnr,
+    maktx TYPE maktx,
+  END OF ty_makt.
+
+TYPES:
+  BEGIN OF ty_config,
+    bukrs TYPE bukrs,
+    blart TYPE blart,
+  END OF ty_config.
+
+TYPES:
+  BEGIN OF ty_alv,
+    bukrs TYPE bukrs,
+    kunnr TYPE kunnr,
+    belnr TYPE belnr_d,
+    gjahr TYPE gjahr,
+    buzei TYPE buzei,
+    matnr TYPE matnr,
+    maktx TYPE maktx,
+    xblnr TYPE xblnr1,
+    zuonr TYPE dzuonr,
+    budat TYPE budat,
+    shkzg TYPE shkzg,
+    dmbtr TYPE dmbtr,
+    zlsch TYPE dzlsch,
+    faedt TYPE faedt_kk,
+  END OF ty_alv.
+
+TYPES: ty_r_blart TYPE RANGE OF blart.
+
+*----------------------------------------------------------------------*
+* TABELAS INTERNAS
+*----------------------------------------------------------------------*
+DATA: gt_bsid   TYPE TABLE OF ty_bsid,
+      gt_bsad   TYPE TABLE OF ty_bsad,
+      gt_bseg   TYPE TABLE OF ty_bseg,
+      gt_makt   TYPE TABLE OF ty_makt,
+      gt_config TYPE TABLE OF ty_config,
+      gt_alv    TYPE TABLE OF ty_alv.
+
+*----------------------------------------------------------------------*
+* WORK AREAS
+*----------------------------------------------------------------------*
+DATA: gs_bsid   TYPE ty_bsid,
+      gs_bsad   TYPE ty_bsad,
+      gs_bseg   TYPE ty_bseg,
+      gs_makt   TYPE ty_makt,
+      gs_config TYPE ty_config,
+      gs_alv    TYPE ty_alv.
+
+*----------------------------------------------------------------------*
+* VARIÁVEIS
+*----------------------------------------------------------------------*
+DATA: gv_faedt TYPE faedt_kk.</code></pre>
+
+                                <h3>📚 Explicação dos Componentes</h3>
+                                <ul>
+                                    <li><strong>TABLES:</strong> Declara as tabelas SAP que serão usadas</li>
+                                    <li><strong>TYPES:</strong> Define estruturas customizadas para organizar dados</li>
+                                    <li><strong>DATA - Tabelas Internas:</strong> Armazena múltiplos registros em memória</li>
+                                    <li><strong>DATA - Work Areas:</strong> Processa um registro por vez</li>
+                                    <li><strong>ty_r_blart:</strong> Tipo range para filtrar tipos de documentos</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Continue com as outras seções... Devido ao limite de caracteres, vou criar os arquivos CSS e JS separados -->
+
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

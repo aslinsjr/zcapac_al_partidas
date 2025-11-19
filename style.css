@@ -1,0 +1,439 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #0070d2;
+    --secondary-color: #005fb2;
+    --accent-color: #ff9900;
+    --bg-color: #f4f6f9;
+    --sidebar-bg: #2c3e50;
+    --text-color: #333;
+    --border-color: #dfe3e8;
+    --code-bg: #f8f9fa;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --error-color: #dc3545;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 300px;
+    background-color: var(--sidebar-bg);
+    color: white;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 25px;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.sidebar-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: var(--accent-color);
+}
+
+.sidebar-header p {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.4;
+}
+
+.sidebar-menu {
+    list-style: none;
+}
+
+.sidebar-menu li {
+    margin-bottom: 6px;
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 12px 15px;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.sidebar-menu a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding-left: 22px;
+}
+
+.sidebar-menu a.active {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+.sidebar-menu a::before {
+    content: "▸";
+    margin-right: 12px;
+    color: var(--accent-color);
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 300px;
+    flex: 1;
+    padding: 40px 50px;
+    max-width: 1400px;
+}
+
+.hero {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 45px;
+    border-radius: 12px;
+    margin-bottom: 40px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+.hero h1 {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.hero p {
+    font-size: 1.15rem;
+    opacity: 0.95;
+    max-width: 900px;
+}
+
+/* Accordion */
+.accordion {
+    margin-bottom: 20px;
+}
+
+.accordion-item {
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.accordion-item:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.accordion-header {
+    padding: 22px 28px;
+    background-color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.accordion-header:hover {
+    background-color: #f8f9fa;
+}
+
+.accordion-header.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom-color: var(--border-color);
+}
+
+.accordion-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.accordion-icon {
+    font-size: 1.6rem;
+}
+
+.accordion-arrow {
+    font-size: 1.3rem;
+    transition: transform 0.3s ease;
+}
+
+.accordion-header.active .accordion-arrow {
+    transform: rotate(90deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    background-color: white;
+}
+
+.accordion-content.active {
+    max-height: 10000px;
+}
+
+.accordion-body {
+    padding: 30px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Content Styling */
+.accordion-body h3 {
+    color: var(--primary-color);
+    margin-top: 30px;
+    margin-bottom: 18px;
+    font-size: 1.4rem;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.accordion-body h3:first-child {
+    margin-top: 0;
+}
+
+.accordion-body h4 {
+    color: var(--secondary-color);
+    margin-top: 22px;
+    margin-bottom: 14px;
+    font-size: 1.15rem;
+}
+
+.accordion-body p {
+    margin-bottom: 16px;
+    line-height: 1.8;
+}
+
+.accordion-body ul,
+.accordion-body ol {
+    margin-left: 28px;
+    margin-bottom: 18px;
+}
+
+.accordion-body li {
+    margin-bottom: 10px;
+    line-height: 1.8;
+}
+
+.accordion-body ol {
+    counter-reset: item;
+}
+
+.accordion-body ol li {
+    display: block;
+    position: relative;
+}
+
+code {
+    background-color: var(--code-bg);
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 0.9em;
+    color: #e83e8c;
+    border: 1px solid #e9ecef;
+}
+
+pre {
+    background-color: #282c34;
+    color: #abb2bf;
+    padding: 25px;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 25px 0;
+    border-left: 5px solid var(--primary-color);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+    border: none;
+    color: #abb2bf;
+}
+
+.info-box {
+    background-color: #e7f3ff;
+    border-left: 5px solid var(--primary-color);
+    padding: 18px 25px;
+    margin: 25px 0;
+    border-radius: 6px;
+}
+
+.info-box strong {
+    color: var(--primary-color);
+}
+
+.success-box {
+    background-color: #d4edda;
+    border-left: 5px solid var(--success-color);
+    padding: 18px 25px;
+    margin: 25px 0;
+    border-radius: 6px;
+}
+
+.success-box strong {
+    color: var(--success-color);
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border-left: 5px solid var(--warning-color);
+    padding: 18px 25px;
+    margin: 25px 0;
+    border-radius: 6px;
+}
+
+.warning-box strong {
+    color: #856404;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    background: white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 5px 5px 5px 0;
+}
+
+.badge-blue {
+    background-color: #e7f3ff;
+    color: var(--primary-color);
+}
+
+.badge-orange {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.badge-green {
+    background-color: #d4edda;
+    color: var(--success-color);
+}
+
+kbd {
+    background-color: #f8f9fa;
+    border: 1px solid #dfe3e8;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        width: 100%;
+        margin-left: 0;
+        padding: 25px;
+    }
+
+    .hero h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+}
+
+/* Scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+.section {
+    scroll-margin-top: 30px;
+}
+
+/* Custom scrollbar */
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
